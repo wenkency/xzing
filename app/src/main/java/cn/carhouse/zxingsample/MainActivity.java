@@ -10,7 +10,7 @@ import cn.carhouse.permission.Permission;
 import cn.carhouse.permission.PermissionListenerAdapter;
 import cn.carhouse.permission.XPermission;
 import cn.carhouse.zxing.CaptureActivity;
-//--
+//--1
 public class MainActivity extends AppCompatActivity {
 
     @Override
