@@ -100,7 +100,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
     private CaptureActivityHandler handler;
     private Result savedResultToShow;
     private ViewfinderView viewfinderView;
-    private TextView statusView;
+//    private TextView statusView;
     private View resultView;
     private Result lastResult;
     private boolean hasSurface;
@@ -161,7 +161,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
         viewfinderView.setCameraManager(cameraManager);
 
         resultView = findViewById(R.id.result_view);
-        statusView = (TextView) findViewById(R.id.status_view);
+//        statusView = (TextView) findViewById(R.id.status_view);
 
         handler = null;
         lastResult = null;
@@ -223,7 +223,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 
                 String customPromptMessage = intent.getStringExtra(Intents.Scan.PROMPT_MESSAGE);
                 if (customPromptMessage != null) {
-                    statusView.setText(customPromptMessage);
+//                    statusView.setText(customPromptMessage);
                 }
 
             } else if (dataString != null &&
@@ -533,7 +533,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
             return;
         }
 
-        statusView.setVisibility(View.GONE);
+//        statusView.setVisibility(View.GONE);
         viewfinderView.setVisibility(View.GONE);
         resultView.setVisibility(View.VISIBLE);
 
@@ -630,7 +630,7 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
             if (rawResultString.length() > 32) {
                 rawResultString = rawResultString.substring(0, 32) + " ...";
             }
-            statusView.setText(getString(resultHandler.getDisplayTitle()) + " : " + rawResultString);
+//            statusView.setText(getString(resultHandler.getDisplayTitle()) + " : " + rawResultString);
         }
 
         maybeSetClipboard(resultHandler);
@@ -750,12 +750,13 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
             handler.sendEmptyMessageDelayed(R.id.restart_preview, delayMS);
         }
         resetStatusView();
+
     }
 
     private void resetStatusView() {
         resultView.setVisibility(View.GONE);
-        statusView.setText(R.string.msg_default_status);
-        statusView.setVisibility(View.VISIBLE);
+//        statusView.setText(R.string.msg_default_status);
+//        statusView.setVisibility(View.VISIBLE);
         viewfinderView.setVisibility(View.VISIBLE);
         lastResult = null;
     }

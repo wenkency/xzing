@@ -20,11 +20,14 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Point;
 import android.hardware.Camera;
+import android.os.Build;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Display;
 import android.view.Surface;
 import android.view.WindowManager;
+
+import java.util.regex.Pattern;
 
 import cn.carhouse.zxing.PreferencesActivity;
 import cn.carhouse.zxing.camera.open.CameraFacing;
@@ -148,6 +151,8 @@ final class CameraConfigurationManager {
       return;
     }
 
+
+
     Log.i(TAG, "Initial camera parameters: " + parameters.flatten());
 
     if (safeMode) {
@@ -186,6 +191,8 @@ final class CameraConfigurationManager {
     }
 
     parameters.setPreviewSize(bestPreviewSize.x, bestPreviewSize.y);
+    setFlash(parameters);
+    setZoom(parameters);
 
     theCamera.setParameters(parameters);
 
@@ -200,6 +207,105 @@ final class CameraConfigurationManager {
       bestPreviewSize.y = afterSize.height;
     }
   }
+
+  private void setFlash(Camera.Parameters parameters) {
+    // FIXME: This is a hack to turn the flash off on the Samsung Galaxy.
+    // And this is a hack-hack to work around a different value on the Behold II
+    // Restrict Behold II check to Cupcake, per Samsung's advice
+    //if (Build.MODEL.contains("Behold II") &&
+    //    CameraManager.SDK_INT == Build.VERSION_CODES.CUPCAKE) {
+    if (Build.MODEL.contains("Behold II") && Build.VERSION.SDK_INT == 3) { // 3 = Cupcake
+      parameters.set("flash-value", 1);
+    } else {
+      parameters.set("flash-value", 2);
+    }
+    // This is the standard setting to turn the flash off that all devices should honor.
+    parameters.set("flash-mode", "off");
+  }
+
+  private void setZoom(Camera.Parameters parameters) {
+
+    String zoomSupportedString = parameters.get("zoom-supported");
+    if (zoomSupportedString != null && !Boolean.parseBoolean(zoomSupportedString)) {
+      return;
+    }
+
+    int tenDesiredZoom = 27;
+
+    String maxZoomString = parameters.get("max-zoom");
+    if (maxZoomString != null) {
+      try {
+        int tenMaxZoom = (int) (10.0 * Double.parseDouble(maxZoomString));
+        if (tenDesiredZoom > tenMaxZoom) {
+          tenDesiredZoom = tenMaxZoom;
+        }
+      } catch (NumberFormatException nfe) {
+        Log.w(TAG, "Bad max-zoom: " + maxZoomString);
+      }
+    }
+
+    String takingPictureZoomMaxString = parameters.get("taking-picture-zoom-max");
+    if (takingPictureZoomMaxString != null) {
+      try {
+        int tenMaxZoom = Integer.parseInt(takingPictureZoomMaxString);
+        if (tenDesiredZoom > tenMaxZoom) {
+          tenDesiredZoom = tenMaxZoom;
+        }
+      } catch (NumberFormatException nfe) {
+        Log.w(TAG, "Bad taking-picture-zoom-max: " + takingPictureZoomMaxString);
+      }
+    }
+
+    String motZoomValuesString = parameters.get("mot-zoom-values");
+    if (motZoomValuesString != null) {
+      tenDesiredZoom = findBestMotZoomValue(motZoomValuesString, tenDesiredZoom);
+    }
+
+    String motZoomStepString = parameters.get("mot-zoom-step");
+    if (motZoomStepString != null) {
+      try {
+        double motZoomStep = Double.parseDouble(motZoomStepString);
+        int tenZoomStep = (int) (10.0 * motZoomStep);
+        if (tenZoomStep > 1) {
+          tenDesiredZoom -= tenDesiredZoom % tenZoomStep;
+        }
+      } catch (NumberFormatException nfe) {
+        // continue
+      }
+    }
+
+    // Set zoom. This helps encourage the user to pull back.
+    // Some devices like the Behold have a zoom parameter
+    if (maxZoomString != null || motZoomValuesString != null) {
+      parameters.set("zoom", String.valueOf(tenDesiredZoom / 10.0));
+    }
+
+    // Most devices, like the Hero, appear to expose this zoom parameter.
+    // It takes on values like "27" which appears to mean 2.7x zoom
+    if (takingPictureZoomMaxString != null) {
+      parameters.set("taking-picture-zoom", tenDesiredZoom);
+    }
+  }
+
+  private static final Pattern COMMA_PATTERN = Pattern.compile(",");
+  private static int findBestMotZoomValue(CharSequence stringValues, int tenDesiredZoom) {
+    int tenBestValue = 0;
+    for (String stringValue : COMMA_PATTERN.split(stringValues)) {
+      stringValue = stringValue;
+      double value;
+      try {
+        value = Double.parseDouble(stringValue);
+      } catch (NumberFormatException nfe) {
+        return tenDesiredZoom;
+      }
+      int tenValue = (int) (10.0 * value);
+      if (Math.abs(tenDesiredZoom - value) < Math.abs(tenDesiredZoom - tenBestValue)) {
+        tenBestValue = tenValue;
+      }
+    }
+    return tenBestValue;
+  }
+
 
   Point getBestPreviewSize() {
     return bestPreviewSize;
