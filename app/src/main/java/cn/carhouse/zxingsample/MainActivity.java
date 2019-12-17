@@ -10,6 +10,8 @@ import cn.carhouse.permission.Permission;
 import cn.carhouse.permission.PermissionListenerAdapter;
 import cn.carhouse.permission.XPermission;
 import cn.carhouse.zxing.CaptureActivity;
+import cn.carhouse.zxing.Intents;
+
 //--2
 public class MainActivity extends AppCompatActivity {
 
@@ -25,7 +27,10 @@ public class MainActivity extends AppCompatActivity {
                 .request(new PermissionListenerAdapter() {
                     @Override
                     public void onSucceed() {
-                        startActivity(new Intent(MainActivity.this, CaptureActivity.class));
+                        Intent intent = new Intent(MainActivity.this, CaptureActivity.class);
+                        intent.setAction(Intents.Scan.ACTION);
+                        intent.putExtra(Intents.Scan.QR_CODE_MODE, "QR_CODE");
+                        startActivity(intent);
                     }
                 });
 

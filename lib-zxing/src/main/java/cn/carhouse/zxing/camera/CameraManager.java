@@ -331,7 +331,7 @@ public final class CameraManager {
         if (rect == null) {
             return null;
         }
-        // Go ahead and assume it's YUV rather than die.
+        // 全屏扫描可以改这里
         return new PlanarYUVLuminanceSource(data, width, height, rect.left, rect.top,
                 rect.width(), rect.height(), false);
     }
